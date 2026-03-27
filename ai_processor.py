@@ -1,6 +1,6 @@
 import os
 import json
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,8 +11,10 @@ class AIProcessor:
         if not api_key:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
         
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        # Using the new google-genai SDK
+        self.client = genai.Client(api_key=api_key)
+        # Using gemini-2.0-flash for better performance and availability
+        self.model_id = 'gemini-2.0-flash'
         
         self.system_prompt = """
         You are a real-time voice assistant for Discord. 
@@ -33,22 +35,18 @@ class AIProcessor:
     async def process_audio_chunk(self, audio_data, sample_rate):
         """
         Processes a chunk of audio data using Gemini.
-        Note: For a real implementation, you'd convert numpy array to bytes/wav.
         """
         try:
-            # In a real local app, we'd send the audio bytes.
-            # For this example, we'll assume we're sending a prompt with the context.
-            # Gemini 1.5 Flash supports audio input directly.
-            
-            # Placeholder for audio-to-text logic
-            # response = await self.model.generate_content([self.system_prompt, audio_part])
-            
-            # For the sake of the template, let's assume we're using text-based simulation 
-            # if audio processing isn't fully configured.
+            # For the simulation/template, we use text-based processing.
+            # In a full audio implementation, you'd pass the audio bytes.
             prompt = "Process this audio chunk for transcription and translation."
-            response = self.model.generate_content(
-                f"{self.system_prompt}\n\nInput: {prompt}",
-                generation_config={"response_mime_type": "application/json"}
+            
+            response = self.client.models.generate_content(
+                model=self.model_id,
+                contents=f"{self.system_prompt}\n\nInput: {prompt}",
+                config={
+                    'response_mime_type': 'application/json'
+                }
             )
             
             return json.loads(response.text)
