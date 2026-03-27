@@ -1,0 +1,8 @@
+google-generativeai
+sounddevice
+numpy
+customtkinter
+python-dotenv
+PyAudio
+Pillow
+keyboard

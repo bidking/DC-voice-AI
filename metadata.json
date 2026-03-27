@@ -1,0 +1,5 @@
+{
+  "name": "Discord AI Live Companion",
+  "description": "A real-time transcription and translation companion for Discord voice chat. Captures audio locally and uses Gemini for live English-to-Indonesian translation and reply suggestions.",
+  "requestFramePermissions": ["microphone"]
+}
