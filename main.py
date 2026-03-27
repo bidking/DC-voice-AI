@@ -60,13 +60,23 @@ class App(ctk.CTk):
         
         while self.is_running:
             chunk = self.capture.get_next_chunk()
+            
+            if chunk == "SILENT":
+                self.overlay.set_status("● Silence...", "gray")
+                continue
+                
             if chunk is not None:
                 self.overlay.set_status("● Processing...", "#FFC107")
                 result = loop.run_until_complete(self.processor.process_audio_chunk(chunk, self.capture.sample_rate))
                 
                 if result:
-                    self.overlay.update_content(result)
-                    self.overlay.set_status("● Listening...", "#4CAF50")
+                    if "error" in result and "429" in result["error"]:
+                        self.overlay.set_status("● Quota Full (Wait 20s)", "#F44336")
+                        import time
+                        time.sleep(20) # Wait for quota reset
+                    else:
+                        self.overlay.update_content(result)
+                        self.overlay.set_status("● Listening...", "#4CAF50")
                 else:
                     self.overlay.set_status("● Error", "#F44336")
 

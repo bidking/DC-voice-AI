@@ -48,9 +48,16 @@ class AudioCapture:
             self.stream.stop()
             self.stream.close()
 
+    def is_silent(self, data, threshold=0.01):
+        """
+        Checks if the audio chunk is silent based on RMS threshold.
+        """
+        rms = np.sqrt(np.mean(data**2))
+        return rms < threshold
+
     def get_next_chunk(self):
         """
-        Collects enough samples for a full chunk.
+        Collects enough samples for a full chunk and checks for silence.
         """
         samples = []
         current_size = 0
@@ -65,4 +72,10 @@ class AudioCapture:
         if not samples:
             return None
             
-        return np.concatenate(samples)[:self.chunk_size]
+        full_chunk = np.concatenate(samples)[:self.chunk_size]
+        
+        # If the chunk is silent, return a special signal to skip processing
+        if self.is_silent(full_chunk):
+            return "SILENT"
+            
+        return full_chunk

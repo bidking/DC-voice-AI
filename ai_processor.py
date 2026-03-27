@@ -37,8 +37,6 @@ class AIProcessor:
         Processes a chunk of audio data using Gemini.
         """
         try:
-            # For the simulation/template, we use text-based processing.
-            # In a full audio implementation, you'd pass the audio bytes.
             prompt = "Process this audio chunk for transcription and translation."
             
             response = self.client.models.generate_content(
@@ -51,5 +49,8 @@ class AIProcessor:
             
             return json.loads(response.text)
         except Exception as e:
-            print(f"AI Processing Error: {e}")
+            error_msg = str(e)
+            print(f"AI Processing Error: {error_msg}")
+            if "429" in error_msg:
+                return {"error": "429 Quota Exceeded"}
             return None
