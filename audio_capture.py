@@ -14,14 +14,31 @@ class AudioCapture:
 
     def get_wasapi_loopback_device(self):
         """
-        Finds the WASAPI loopback device on Windows.
+        Finds the WASAPI loopback device on Windows, prioritizing headsets.
         """
         devices = sd.query_devices()
+        print("\n--- DAFTAR PERANGKAT AUDIO ---")
+        loopback_id = None
+        
         for i, dev in enumerate(devices):
-            if "WASAPI" in dev.get('hostapi_name', '') and dev.get('max_input_channels') > 0:
-                # Usually "Stereo Mix" or "Speakers (Loopback)"
-                if "Loopback" in dev.get('name') or "Output" in dev.get('name'):
-                    return i
+            name = dev.get('name', '')
+            hostapi = dev.get('hostapi_name', '')
+            print(f"ID {i}: {name} ({hostapi}) - Input Channels: {dev.get('max_input_channels')}")
+            
+            # Cari WASAPI Loopback
+            if "WASAPI" in hostapi and dev.get('max_input_channels') > 0:
+                if "Loopback" in name:
+                    # Prioritaskan jika ada kata 'Headset' atau 'Headphone'
+                    if "Headset" in name or "Headphone" in name:
+                        print(f"DEBUG: Menemukan Headset Loopback di ID {i}")
+                        return i
+                    loopback_id = i
+        
+        if loopback_id is not None:
+            print(f"DEBUG: Menggunakan Loopback ID {loopback_id}")
+            return loopback_id
+            
+        print("DEBUG: Tidak menemukan Loopback spesifik, menggunakan default.")
         return sd.default.device[0]
 
     def _audio_callback(self, indata, frames, time, status):
@@ -48,7 +65,7 @@ class AudioCapture:
             self.stream.stop()
             self.stream.close()
 
-    def is_silent(self, data, threshold=0.01):
+    def is_silent(self, data, threshold=0.002):
         """
         Checks if the audio chunk is silent based on RMS threshold.
         """
